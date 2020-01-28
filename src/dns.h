@@ -557,15 +557,18 @@ DNS_PUBLIC int dns_rr_i_shuffle(struct dns_rr *, struct dns_rr *, struct dns_rr_
 
 DNS_PUBLIC struct dns_rr_i *dns_rr_i_init(struct dns_rr_i *, struct dns_packet *);
 
-#define dns_rr_i_save(i)	((i)->saved = (i)->state)
-#define dns_rr_i_rewind(i)	((i)->state = (i)->saved)
-#define dns_rr_i_count(i)	((i)->state.count)
-
 DNS_PUBLIC unsigned dns_rr_grep(struct dns_rr *, unsigned, struct dns_rr_i *, struct dns_packet *, int *);
 
-#define dns_rr_foreach(rr, P, ...)	\
-	for (struct dns_rr_i DNS_PP_XPASTE(i, __LINE__) = *dns_rr_i_new((P), __VA_ARGS__); dns_rr_grep((rr), 1, &DNS_PP_XPASTE(i, __LINE__), (P), &(int){ 0 }); )
+#define dns_rr_i_init_variadic(rri_p, P, ...) \
+	*rri_p = (struct dns_rr_i){__VA_ARGS__}; \
+	dns_rr_i_init(rri_p, (P));
 
+#define dns_rr_i_save(i) ((i)->saved = (i)->state)
+#define dns_rr_i_rewind(i) ((i)->state = (i)->saved)
+#define dns_rr_i_count(i) ((i)->state.count)
+
+#define dns_rr_foreach(rr, P, ...) \
+	struct dns_rr_i DNS_PP_XPASTE(i, __LINE__); dns_rr_i_init_variadic(&DNS_PP_XPASTE(i, __LINE__), (P), __VA_ARGS__); for (; dns_rr_grep((rr), 1, &DNS_PP_XPASTE(i, __LINE__), (P), &(int){0});)
 
 /*
  * A  R E S O U R C E  R E C O R D
